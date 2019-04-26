@@ -23,7 +23,9 @@ def rb(tmax, h, p10, p20):
     p2[0] = p20
     for i in range(1, int(tmax/h)):
         p1[i], p2[i] = rk4(p1[i-1], p2[i-1], h)
-    plt.plot(np.arange(0, tmax, h), p1)
+    #plt.plot(np.arange(0, tmax, h), p1)
+    #plt.plot(np.arange(0, tmax, h), p2)
+    plt.plot(np.arange(0, tmax, h), np.subtract(p2, p1))
     plt.show()
 
-rb(100, 0.1, 100, 10)
+rb(10000, 0.1, 500, 400)
