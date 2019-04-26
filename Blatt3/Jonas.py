@@ -21,11 +21,18 @@ def rb(tmax, h, p10, p20):
     p2 = [0]*(int(tmax/h))
     p1[0] = p10
     p2[0] = p20
+    pro = 0
+    mess = 0
     for i in range(1, int(tmax/h)):
         p1[i], p2[i] = rk4(p1[i-1], p2[i-1], h)
+        pro = 100*(i*h/tmax)
+        if (mess + 10 < pro):
+            print(str(round(pro, 0))+"% Fortschritt")
+            mess = pro
     #plt.plot(np.arange(0, tmax, h), p1)
     #plt.plot(np.arange(0, tmax, h), p2)
-    plt.plot(np.arange(0, tmax, h), np.subtract(p2, p1))
+    plt.plot(np.arange(0, tmax, h), np.subtract(p1, p2))
+    #plt.plot(p1, p2)
     plt.show()
 
-rb(10000, 0.1, 500, 400)
+rb(200, 0.0005, 500, 400)
