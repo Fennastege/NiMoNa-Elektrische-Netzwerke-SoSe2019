@@ -55,4 +55,4 @@ def main(N, K, T, h):
     plot(theta, h, T)
 
 
-main(50, 50, 0.5, 0.01)
+main(50, 50, 0.3, 0.002)
