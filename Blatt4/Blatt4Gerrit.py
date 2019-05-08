@@ -49,4 +49,4 @@ def ergebnis(K, N_t, dt, omega, theta):     #Schleife zum Berechnen und Plotten 
         i+=1                                #Zählvariable
     return
 
-ergebnis(50, 100, 0.01, zufall_omega(), zufall_theta())
+ergebnis(50, 2, 0.01, zufall_omega(), zufall_theta())
