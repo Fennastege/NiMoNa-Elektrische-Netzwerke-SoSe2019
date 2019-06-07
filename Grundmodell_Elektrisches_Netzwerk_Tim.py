@@ -167,7 +167,12 @@ def ordnung(N,theta):
     
     #r und Phi berechnen
     r = (tempIm**2 + tempRe**2)**(1/2)
-    phi = np.arccos(tempRe)
+    
+    #Fallunterscheidung um phi richtig zu berechnen
+    if (tempIm >= 0):
+            phi = np.arccos(tempRe)
+    else:
+            phi = 2 * np.pi - np.arccos(tempRe)
     
     return r,phi
 
@@ -296,7 +301,7 @@ for i in range(0,anzahlschritte):
         #Synchronisation ermitteln
         for o in range(0,N):
             #überprüfen ob 
-            if (abs(theta_temp[o,1]- theta[0,1]) <= 0.01):
+            if (abs(theta_temp[o,1]- theta[o,1]) <= 0.0001):
                 synchronisiert[o] = "true"
             
         #theta_temp auf theta setzen für den nächsten Vergleich
