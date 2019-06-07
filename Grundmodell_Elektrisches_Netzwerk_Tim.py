@@ -196,7 +196,7 @@ def kuramoto(theta,power = P,adjamatrix = adjazenzmatrix):
         
     #Funktionswerte ermitteln (in 2d)
     res[:,0]= theta[:,1] #Ableitung von Theta ist Theta-Punkt
-    res[:,1]= power - alpha*theta[:,1] + sum_kop #Ableitung von Theta-Punkt entspricht Kuramoto-Gleichung
+    res[:,1]= power - alpha*theta[:,1] - sum_kop #Ableitung von Theta-Punkt entspricht Kuramoto-Gleichung
 
     return res
 
