@@ -10,7 +10,7 @@ def kuramoto(phasen, frequenz, args):
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
     for m,j,l in zip(*sp.find(K)):#Für alle Einträge von K die nicht 0 sind
         summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
-    return frequenz, P - 0.1*frequenz - summe #Die Differentialgleichungen zurückgeben
+    return frequenz, P - 0.1*frequenz + summe #Die Differentialgleichungen zurückgeben
 
 
 def rk4(f, p1, p2, h, args=[]):
