@@ -9,7 +9,10 @@ def kuramoto(x, args):
     phasen, frequenz = x
     K, P = args
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
-    for m,j,l in zip(*sp.find(K)):#Für alle Einträge von K die nicht 0 sind
+    m=0
+    j=0
+    l=0
+    for m,j,l in zip(*sp.find(K)):#Fuer alle Eintraege von K die nicht 0 sind
         summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
     return np.array([frequenz, P - 0.1*frequenz - summe]) #Die Differentialgleichungen zurückgeben  
 
@@ -30,11 +33,12 @@ def o(p):
     re = 0
     im = 0
     for i in p:
-        re += np.cos(i)/N
+        re +=np.cos(i)/N
         im += np.sin(i)/N
     r = np.sqrt(re**2 + im**2)
-    phi = np.arccos(re/r)
-    return r, phi
+    phi_c= np.arccos(re/r)
+    phi_s= np.arcsin(im/r)
+    return r, phi_c,phi_s
 
 
 def plot(phi, h, T, skip):
@@ -45,12 +49,12 @@ def plot(phi, h, T, skip):
     plt.plot(np.sin(an), np.cos(an)) #Kreis zeichnen
     plt.draw()
     plt.show(block=False)
-    for i in range(1, int(T/h)):#Über die Zeitschritte iterieren
-        if(i%(skip+1) == 0):#Nur plotten, wenn i ein vielfaches von skip ist
-            plt.title("t = " + str(round(h*i, 2)) + "s")#Überschrift mit der Aktuellen Zeit erstellen
+    for i in range(0, int(T/h)):#ueber die Zeitschritte iterieren
+        if(i%(skip)== 0):#Nur plotten, wenn i ein vielfaches von skip ist
+            plt.title("t = " + str(round(h*i, 2)) + "s")#ueberschrift mit der Aktuellen Zeit erstellen
             t = plt.plot(np.sin(phi[i]), np.cos(phi[i]), "ro")#Punkte einzeichnen
-            r, winkel = o(phi[i])#Ordnungsparameter bestimmen
-            t2 = plt.arrow(0, 0, r*np.sin(winkel), r*np.cos(winkel), head_width=0.05)#Pfeil zeichnen
+            r, winkel_c,winkel_s = o(phi[i])#Ordnungsparameter bestimmen
+            t2 = plt.arrow(0, 0, r*np.sin(winkel_s), r*np.cos(winkel_c), head_width=0.05)#Pfeil zeichnen
             plt.draw()#Zeichnen
             plt.pause(0.01)#Warten
             t.pop(0).remove()#Entfernen der Alten Punkte
@@ -61,6 +65,8 @@ def netz(T, h, message, K, P, skip):
     """T ist die Simulationsdauer, h die Schrittweite, message ist abstand in dem der Fortschritt ausgegeben wird, K die Adjazenzmatrix, 
     P der Lesitungsvektor und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
+    print len(P)
+    print len(phi[0])
     phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
     phi[0] = np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
     phipunkt[0] = 0.1*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
@@ -69,17 +75,27 @@ def netz(T, h, message, K, P, skip):
     for i in range(1, int(T/h)):
         phi[i], phipunkt[i] = rk4(kuramoto, [phi[i-1], phipunkt[i-1]], h, [K, P]) #Berechnen der nächsten Werte
         pro = 100*(i*h/T) #Aktuellen Fortschritt errechnen
-        if (mess + message < pro): #Überprüfen, ob eine neue Nachricht geprinted werden soll
+        if (mess + message < pro): #ueberpruefen, ob eine neue Nachricht geprinted werden soll
             print(str(round(pro, 0))+"% Fortschritt")
+            r, winkel_c,winkel_s = o(phi[i])#Ordnungsparameter bestimmen
+            print r
+            print winkel_c,winkel_s
             mess = pro
     plot(phi, h, T, skip)#Plotten der Ergebnisse
 
 
-K = np.load('romAdj.npy')#Laden der Adjazenzmatrix
-P=[]#Leistungen abwechselnd 1 und -1 setzen
-for i in range((int)(len(K[0])/2)):
-    P.append(1)
-    P.append(-1)
+ad = np.load('romAdj.npy')#Laden der Adjazenzmatrix
+K=sp.csr_matrix(ad)
+P=np.zeros(K.shape[0])#Leistungen abwechselnd 1 und -1 setzen
+sum_power=0.0
+for i in range(K.shape[0]):
+    if i%2==0:
+        P[i]=-1.0
+    else:
+        P[i]=1.0
+    sum_power=sum_power+P[i]
+if sum_power!=0.0:
+    print('sum over power does not equal 0!')
 
 
 # K = [[0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
