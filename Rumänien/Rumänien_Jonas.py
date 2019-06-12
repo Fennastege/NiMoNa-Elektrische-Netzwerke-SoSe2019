@@ -9,12 +9,9 @@ def kuramoto(x, args):
     phasen, frequenz = x
     K, P = args
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
-    m=0
-    j=0
-    l=0
     for m,j,l in zip(*sp.find(K)):#Fuer alle Eintraege von K die nicht 0 sind
         summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
-    return np.array([frequenz, P - 0.1*frequenz - summe]) #Die Differentialgleichungen zurückgeben  
+    return np.array([frequenz, P - 0.1*frequenz + summe]) #Die Differentialgleichungen zurückgeben  
 
 
 def rk4(f, x, h, args=[]):
@@ -38,7 +35,7 @@ def o(p):
     r = np.sqrt(re**2 + im**2)
     phi_c= np.arccos(re/r)
     phi_s= np.arcsin(im/r)
-    return r, phi_c,phi_s
+    return r, phi_c, phi_s
 
 
 def plot(phi, h, T, skip):
@@ -53,7 +50,7 @@ def plot(phi, h, T, skip):
         if(i%(skip)== 0):#Nur plotten, wenn i ein vielfaches von skip ist
             plt.title("t = " + str(round(h*i, 2)) + "s")#ueberschrift mit der Aktuellen Zeit erstellen
             t = plt.plot(np.sin(phi[i]), np.cos(phi[i]), "ro")#Punkte einzeichnen
-            r, winkel_c,winkel_s = o(phi[i])#Ordnungsparameter bestimmen
+            r, winkel_c, winkel_s = o(phi[i])#Ordnungsparameter bestimmen
             t2 = plt.arrow(0, 0, r*np.sin(winkel_s), r*np.cos(winkel_c), head_width=0.05)#Pfeil zeichnen
             plt.draw()#Zeichnen
             plt.pause(0.01)#Warten
@@ -65,8 +62,6 @@ def netz(T, h, message, K, P, skip):
     """T ist die Simulationsdauer, h die Schrittweite, message ist abstand in dem der Fortschritt ausgegeben wird, K die Adjazenzmatrix, 
     P der Lesitungsvektor und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
-    print len(P)
-    print len(phi[0])
     phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
     phi[0] = np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
     phipunkt[0] = 0.1*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
@@ -77,9 +72,8 @@ def netz(T, h, message, K, P, skip):
         pro = 100*(i*h/T) #Aktuellen Fortschritt errechnen
         if (mess + message < pro): #ueberpruefen, ob eine neue Nachricht geprinted werden soll
             print(str(round(pro, 0))+"% Fortschritt")
-            r, winkel_c,winkel_s = o(phi[i])#Ordnungsparameter bestimmen
-            print r
-            print winkel_c,winkel_s
+            r, _, _ = o(phi[i])#Ordnungsparameter bestimmen
+            print (r)
             mess = pro
     plot(phi, h, T, skip)#Plotten der Ergebnisse
 
@@ -105,7 +99,7 @@ if sum_power!=0.0:
 # p = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
 
 
-# K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
-# P = [1, -0.3, -0.7]
+K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
+P = [1, -0.3, -0.7]
 
-netz(2000, 0.01, 1, K, P, 1000)#Hauptfunktion mit entsprechenden Werten aufrufen
+netz(200, 0.01, 1, K, P, 100)#Hauptfunktion mit entsprechenden Werten aufrufen
