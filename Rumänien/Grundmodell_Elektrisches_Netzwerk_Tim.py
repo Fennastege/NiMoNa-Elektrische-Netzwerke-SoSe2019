@@ -102,7 +102,7 @@ def initialisieren():
     #Synchronisierungsparameter zurücksetzen
     synchronisiert[:] = "false"
     #Theta_temp (für synchro) zurücksetzen
-    theta_temp = theta
+    #theta_temp = theta
     
     #überprüfen ob Leistung der Vorraussetzung für das Modell entspricht
     summe = 0

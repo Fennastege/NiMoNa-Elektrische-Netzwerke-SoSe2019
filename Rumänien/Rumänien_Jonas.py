@@ -2,27 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
-def kuramoto(phasen, frequenz, args):
+def kuramoto(x, args):
     """Kuramoto Gleichungen mit Reibungstherm. phasen sind die Phasen, frequenz die Frequenzen und args=[K, P],
     wobei K die Adjazenzmatrix ist und P die Leistungen.
     Der Rückgabewert sind die Differenzialgleichung für Phasen und Frequenz"""
+    phasen, frequenz = x
     K, P = args
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
     for m,j,l in zip(*sp.find(K)):#Für alle Einträge von K die nicht 0 sind
         summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
-    return frequenz, P - 0.1*frequenz + summe #Die Differentialgleichungen zurückgeben
+    return np.array([frequenz, P - 0.1*frequenz - summe]) #Die Differentialgleichungen zurückgeben  
 
 
-def rk4(f, p1, p2, h, args=[]):
-    """Runge-Kutta 4 Verfahren für die Zwei Differenzialgleichungen in f mit Vektoriellen x-Werten p1 und p2, 
+def rk4(f, x, h, args=[]):
+    """Runge-Kutta 4 Verfahren für Differenzialgleichungen in f mit Vektoriellen x-Werten,
     Schrittweite h und eventuell weitere für die Funktion wichtige Parameter als array in args übergeben"""
-    k1, l1 = f(p1, p2, args) #Die k1 für beide Funktionen ermitteln (l1 ist das k1 der zweiten Funktion)
-    k2, l2 = f(p1 + h/2*k1, p2 + h/2*l1, args)  #Die k2 für beide Funktionen ermitteln
-    k3, l3 = f(p1 + h/2*k2, p2 + h/2*l2, args) #Die k3 für beide Funktionen ermitteln
-    k4, l4 = f(p1 + h*k3, p2 + h*l3, args) #Die k4 für beide Funktionen ermitteln
-    ks = k1 + 2*k2 + 2*k3 + k4 #Summe der ks für die erste Funktion
-    ls = l1 + 2*l2 + 2*l3 + l4 ##Summe der ks für die erste Funktion
-    return p1 + h/6*(ks), p2 + h/6*(ls) #Neue Werte nach dem Runge-Kutta 4 Vervahren zurückgeben
+    k1 = f(x, args)
+    k2 = f(x + h/2*k1, args)
+    k3 = f(x + h/2*k2, args)
+    k4 = f(x + h*k3, args)
+    return x + h/6*(k1 + 2*k2 + 2*k3 + k4) #Neue Werte nach dem Runge-Kutta 4 Vervahren zurückgeben
 
 
 def o(p):
@@ -63,12 +62,12 @@ def netz(T, h, message, K, P, skip):
     P der Lesitungsvektor und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
     phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
-    phi[0] = 0*np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
-    phipunkt[0] = 0*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
+    phi[0] = np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
+    phipunkt[0] = 0.1*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
     pro = 0 #Prozentzahl des Aktuellen Berechnungsfortschritts
     mess = 0 #Prozentzahl, bei der die letzte Benachrichtigung geprinted wurde
     for i in range(1, int(T/h)):
-        phi[i], phipunkt[i] = rk4(kuramoto, phi[i-1], phipunkt[i-1], h, [K, P]) #Berechnen der nächsten Werte
+        phi[i], phipunkt[i] = rk4(kuramoto, [phi[i-1], phipunkt[i-1]], h, [K, P]) #Berechnen der nächsten Werte
         pro = 100*(i*h/T) #Aktuellen Fortschritt errechnen
         if (mess + message < pro): #Überprüfen, ob eine neue Nachricht geprinted werden soll
             print(str(round(pro, 0))+"% Fortschritt")
@@ -82,4 +81,15 @@ for i in range((int)(len(K[0])/2)):
     P.append(1)
     P.append(-1)
 
-netz(20, 0.01, 1, K, P, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
+
+# K = [[0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0], [0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+#      [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+#      [0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0], [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0], [1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
+#      [0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ]
+# p = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
+
+
+# K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
+# P = [1, -0.3, -0.7]
+
+netz(2000, 0.01, 1, K, P, 1000)#Hauptfunktion mit entsprechenden Werten aufrufen
