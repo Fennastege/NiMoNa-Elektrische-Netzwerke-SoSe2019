@@ -34,7 +34,7 @@ def o(p):
         re += np.cos(i)/N
         im += np.sin(i)/N
     r = np.sqrt(re**2 + im**2)
-    phi = np.arccos(re)
+    phi = np.arccos(re/r)
     return r, phi
 
 
@@ -47,23 +47,22 @@ def plot(phi, h, T, skip):
     plt.draw()
     plt.show(block=False)
     for i in range(1, int(T/h)):#Über die Zeitschritte iterieren
-        if(i%(skip+1) != 0):#Nur plotten, wenn i ein vielfaches von skip ist
-            continue
-        plt.title("t = " + str(round(h*i, 2)) + "s")#Überschrift mit der Aktuellen Zeit erstellen
-        t = plt.plot(np.sin(phi[i]), np.cos(phi[i]), "ro")#Punkte einzeichnen
-        r, winkel = o(phi[i])#Ordnungsparameter bestimmen
-        t2 = plt.arrow(0, 0, r*np.sin(winkel), r*np.cos(winkel), head_width=0.05)#Pfeil zeichnen
-        plt.draw()#Zeichnen
-        plt.pause(0.01)#Warten
-        t.pop(0).remove()#Entfernen der Alten Punkte
-        t2.remove()#Entfernen des alten Pheils
+        if(i%(skip+1) == 0):#Nur plotten, wenn i ein vielfaches von skip ist
+            plt.title("t = " + str(round(h*i, 2)) + "s")#Überschrift mit der Aktuellen Zeit erstellen
+            t = plt.plot(np.sin(phi[i]), np.cos(phi[i]), "ro")#Punkte einzeichnen
+            r, winkel = o(phi[i])#Ordnungsparameter bestimmen
+            t2 = plt.arrow(0, 0, r*np.sin(winkel), r*np.cos(winkel), head_width=0.05)#Pfeil zeichnen
+            plt.draw()#Zeichnen
+            plt.pause(0.01)#Warten
+            t.pop(0).remove()#Entfernen der Alten Punkte
+            t2.remove()#Entfernen des alten Pheils
 
 
 def netz(T, h, message, K, P, skip):
     """T ist die Simulationsdauer, h die Schrittweite, message ist abstand in dem der Fortschritt ausgegeben wird, K die Adjazenzmatrix, 
     P der Lesitungsvektor und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
-    phipunkt = phi #Phipunkt hat die gleiche Form
+    phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
     phi[0] = 0*np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
     phipunkt[0] = 0*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
     pro = 0 #Prozentzahl des Aktuellen Berechnungsfortschritts
@@ -83,4 +82,4 @@ for i in range((int)(len(K[0])/2)):
     P.append(1)
     P.append(-1)
 
-netz(20, 0.01, 10, K, P, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
+netz(20, 0.01, 1, K, P, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
