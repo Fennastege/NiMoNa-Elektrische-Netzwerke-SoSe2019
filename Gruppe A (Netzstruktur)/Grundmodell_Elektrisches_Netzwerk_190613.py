@@ -47,7 +47,7 @@ import os
 
 
 #Nummer des Durchlaufs oder Name definieren (für Abspeicherung der Bilder)
-bildname = "basteln_pruefen_synchro_linie"
+bildname = "test_tim"
 #Ordner erstellen für diesen Namen
 #os.mkdir("video/"+bildname)
 
@@ -77,10 +77,10 @@ dt = 0.01
 #MODELLPARAMETER
 
 #Adjazenz-Matrix laden
-adjazenzmatrix = np.load("romAdj.npy")
+adjazenzmatrix = np.load("adjamat2_h.npy")
 
 #Positions-Matrix laden
-position = np.load("romPos.npy")
+position = np.load("posmat2_h.npy")
 
 #Anzahl der Oszillatoren (berechnen aus Größe der Adjazenzmatrix)
 N = len(adjazenzmatrix[0])
