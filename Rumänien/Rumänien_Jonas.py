@@ -139,9 +139,9 @@ def randps(T, h, P):
     for t in range((int)(T/h) + 1):
         b = []
         for i in range(8):
-            b.append(abs(np.cos(t*i + i)*P[i]))
-        a.append([*b ,P[9], P[10], sum([*b ,P[9], P[10]])])  
+            b.append(abs(np.cos(t*i + i))*P[i])
+        a.append([*b ,P[9], P[10], -sum([*b ,P[9], P[10]])])  
     return a
 
 
-calc('n11_var', 100, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
+plot('n11_var', 200, 0.01, 100)#Hauptfunktion mit entsprechenden Werten aufrufen
