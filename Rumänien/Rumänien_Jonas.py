@@ -38,7 +38,7 @@ def o(p):
     return r, phi_c, phi_s
 
 
-def plot(phi, h, T, skip, adjamatrix, posmatrix):
+def plotphi(phi, h, T, skip, adjamatrix, posmatrix):
     """phi ist die Matrix der Phasen zu allen Zeitpunkten, h die Schrittweite, T die Simulationsdauer 
     und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     _, axs = plt.subplots(1, 2, figsize=(13, 6)) #erzeugt zwei Bilder nebeneinander
@@ -72,9 +72,8 @@ def plot(phi, h, T, skip, adjamatrix, posmatrix):
             pfeil.remove()#Entfernen des alten Pfeils
 
 
-def netz(T, h, K, P, skip, pos):
-    """T ist die Simulationsdauer, h die Schrittweite, K die Adjazenzmatrix, 
-    P der Lesitungsvektor und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
+def netz(T, h, K, P, pos):
+    """T ist die Simulationsdauer, h die Schrittweite, K die Adjazenzmatrix und P der Lesitungsvektor"""
     phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
     phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
     phi[0] = np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
@@ -89,30 +88,47 @@ def netz(T, h, K, P, skip, pos):
             r, _, _ = o(phi[i])#Ordnungsparameter bestimmen
             print (r)
             mess = pro
-    plot(phi, h, T, skip, K, pos)#Plotten der Ergebnisse
+    return phi
 
 
-ad = np.load('romAdj.npy')#Laden der Adjazenzmatrix
-K=sp.csr_matrix(ad)
-P=np.zeros(K.shape[0])#Leistungen abwechselnd 1 und -1 setzen
-for i in range(K.shape[0]):
-    if i%2==0:
-        P[i]=-1.0
-    else:
-        P[i]=1.0
-pos = np.load('romPos.npy')
+def init(net): 
+    if(net=='rumänien'):
+        ad = np.load('saves/romAdj.npy')#Laden der Adjazenzmatrix
+        K=sp.csr_matrix(ad)
+        P=np.zeros(K.shape[0])#Leistungen abwechselnd 1 und -1 setzen
+        for i in range(K.shape[0]):
+            if i%2==0:
+                P[i]=-1.0
+            else:
+                P[i]=1.0
+        pos = np.load('saves/romPos.npy')
+    if(net=='n11'):
+        K = [[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
+            [0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ]
+        P = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
+        pos = [[1.5, 3], [3.5, 3], [4, 2.5], [4, 1.5], [3.5, 1], [1.5, 1], [1, 1.5], [1, 2.5], [2, 2], [3, 2], [2, 4]]
+    if(net=='n3'):
+        K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
+        P = [1, -0.3, -0.7]
+        pos = [[1, 1], [1, 2], [2, 1.5]]
+    return K, P, pos
 
-K = [[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-     [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
-     [0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ]
-P = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
-pos = [[1.5, 3], [3.5, 3], [4, 2.5], [4, 1.5], [3.5, 1], [1.5, 1], [1, 1.5], [1, 2.5], [2, 2], [3, 2], [2, 4]]
+
+def calc(net, T, h, skip=-1):
+    if(skip==-1): skip=T
+    K, P, pos = init(net)
+    phi = netz(T, h, K, P, pos)#Hauptfunktion mit entsprechenden Werten aufrufen
+    np.save('saves/' + net + '.npy', phi)#Speichern
+    plotphi(phi, h, T, skip, K, pos)#Plotten der Ergebnisse
 
 
-# K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
-# P = [1, -0.3, -0.7]
-# pos = [[1, 1], [1, 2], [2, 1.5]]
+def plot(net, T, h, skip=-1):
+    if(skip==-1): skip=T
+    K, _, pos = init(net)
+    phi = np.load('saves/' + net + '.npy')
+    plotphi(phi, h, T, skip, K, pos)
 
-netz(100, 0.01, K, P, 50, pos)#Hauptfunktion mit entsprechenden Werten aufrufen
 
+calc('rumänien', 100, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
