@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 import sys
+import matplotlib.image as mpimg
+import os
 
 def kuramoto(x, nr, K, P, Pn):
     """Kuramoto Gleichungen mit Reibungstherm.
@@ -11,7 +13,7 @@ def kuramoto(x, nr, K, P, Pn):
     elif not nr == 1: P = np.divide(np.add(P, Pn), 2) 
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
     for m,j,l in zip(*sp.find(K)):#Fuer alle Eintraege von K die nicht 0 sind
-        summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
+        summe[m] +=50.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
     return np.array([frequenz, P - 0.1*frequenz + summe]) #Die Differentialgleichungen zurückgeben  
 
 
@@ -46,7 +48,8 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
     an = np.linspace(0, 2*np.pi, 100)
     axs[1].plot(np.sin(an), np.cos(an)) #Kreis zeichnen
     for m,j,l in zip(*sp.find(adjamatrix)): #Verbindungslinien zeichnen
-        axs[0].plot([posmatrix[m][0], posmatrix[j][0]], [posmatrix[m][1], posmatrix[j][1]], "-", color="black",linewidth=1.05*l)
+        axs[0].plot([posmatrix[m][0], posmatrix[j][0]], [posmatrix[m][1], posmatrix[j][1]], "-", color="black",linewidth=1*l)
+    axs[0].imshow(mpimg.imread('deutschland.png'), extent=[0, 7, 0, 7])
     plt.draw()
     plt.show(block=False)
     for t in range(0, int(T/h)):#ueber die Zeitschritte iterieren
@@ -113,15 +116,13 @@ def init(net):
         P = [1, -0.3, -0.7]
         pos = [[1, 1], [1, 2], [2, 1.5]]
     elif(net=='nd'):
-        K = adj([5], [4], [5, 6], [6, 7], [1, 3, 10], [3, 4, 7, 10], [4, 6, 8], [7], [10], [5, 9, 11], [10, 13, 18], [13], [11, 12, 16], [15, 16], [14], [13, 14, 17], [16], [11])
-        P = [0.5]*15
-        P.append(-2.5)
-        P.append(-2.5)
-        P.append(-2.5)
+        K = adj([5], [4], [5, 6], [6, 7], [1, 3, 10], [3, 4, 7, 10], [4, 6, 8, 15], [7], [10], [5, 9, 11], [10, 13, 18], [13], [11, 12, 16], [15, 16], [7, 14], [13, 14, 17], [16], [11])
+        P = [0.5, 0.5, -1, -1, -1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, 0.5, 0.5, 1]
         pos = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6]]
     else: sys.exit('Unknown Net')
 
     return K, P, pos, p
+
 
 def adj(*args):
     mat = []
@@ -160,4 +161,4 @@ def randps(T, h, P):
     return a
 
 
-calc('nd', 400, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
+plot('nd', 400, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
