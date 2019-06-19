@@ -60,7 +60,7 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
                 punktart = farbe + "o" if P[t][i]<0 else farbe + "s"
                 p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), punktart)#Punkt in Kreis einzeichnen
                 points.append(p)
-                p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], punktart, markersize=100*abs(P[t][i]))#Punkt einzeichnen
+                p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], punktart, markersize=10*abs(P[t][i]))#Punkt einzeichnen
                 points.append(p)
             plt.draw()#Zeichnen
             plt.pause(0.01)#Warten
@@ -89,7 +89,7 @@ def netz(T, h, K, P, pos):
 
 
 def init(net): 
-    p = lambda P, T, h, *args: [P]*(int)(T/h + 1) if(len(np.shape(P))==1) else P
+    p = lambda T, h, P, *args: [P]*(int(T/h + 1)) if(len(np.shape(P))==1) else P
     if(net=='rumänien'):
         ad = np.load('saves/romAdj.npy')#Laden der Adjazenzmatrix
         K=sp.csr_matrix(ad)
@@ -112,9 +112,25 @@ def init(net):
         K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
         P = [1, -0.3, -0.7]
         pos = [[1, 1], [1, 2], [2, 1.5]]
+    elif(net=='nd'):
+        K = adj([5], [4], [5, 6], [6, 7], [1, 3, 10], [3, 4, 7, 10], [4, 6, 8], [7], [10], [5, 9, 11], [10, 13, 18], [13], [11, 12, 16], [15, 16], [14], [13, 14, 17], [16], [11])
+        P = [0.5]*15
+        P.append(-2.5)
+        P.append(-2.5)
+        P.append(-2.5)
+        pos = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6]]
     else: sys.exit('Unknown Net')
 
     return K, P, pos, p
+
+def adj(*args):
+    mat = []
+    for arg in args:
+        a = [0]*len(args)
+        for i in arg:
+            a[i-1]=1
+        mat.append(a)
+    return mat
 
 
 def calc(net, T, h, skip=-1):
@@ -144,4 +160,4 @@ def randps(T, h, P):
     return a
 
 
-plot('n11_var', 200, 0.01, 100)#Hauptfunktion mit entsprechenden Werten aufrufen
+calc('nd', 400, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
