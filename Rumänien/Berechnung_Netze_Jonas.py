@@ -110,15 +110,16 @@ def init(net):
             [0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ]
         P = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
         pos = [[1.5, 3], [3.5, 3], [4, 2.5], [4, 1.5], [3.5, 1], [1.5, 1], [1, 1.5], [1, 2.5], [2, 2], [3, 2], [2, 4]]
-        if(net=='n11_var'): p = randps
+        if(net=='n11_var'): p = lambda T, h, P: berechnep(T, h, P, lambda t, i, P: abs(np.cos(t*i + i))*P[i] if not i==8 and not i==9 else P[i])
     elif(net=='n3'):
         K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
         P = [1, -0.3, -0.7]
         pos = [[1, 1], [1, 2], [2, 1.5]]
     elif(net=='nd'):
         K = adj([5], [4], [5, 6], [6, 7], [1, 3, 10], [3, 4, 7, 10], [4, 6, 8, 15], [7], [10], [5, 9, 11], [10, 13, 18], [13], [11, 12, 16], [15, 16], [7, 14], [13, 14, 17], [16], [11])
-        P = [0.5, 0.5, -1, -1, -1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, 0.5, 0.5, 1]
+        P = [1, 1, -1, -1, -0.75, -0.75, 2, -0.75, 1, -1, -1, -1, -0.75, 0.5, 0.5, 0.5, 0.5, 1]
         pos = np.load("saves/dtpos.npy")
+        p = lambda T, h, P, *args: berechnep(T, h, P, leistung)
     else: sys.exit('Unknown Net')
 
     return K, P, pos, p
@@ -151,14 +152,18 @@ def plot(net, T, h, skip=-1):
     plotphi(phi, h, T, skip, K, pos, P)
 
 
-def randps(T, h, P):
-    a = [P]
-    for t in range((int)(T/h) + 1):
-        b = []
-        for i in range(8):
-            b.append(abs(np.cos(t*i + i))*P[i])
-        a.append([*b ,P[9], P[10], -sum([*b ,P[9], P[10]])])  
+def berechnep(T, h, P, f):
+    a  = [P]
+    for t in range(int(T/h)+1):
+        b=[]
+        for i in range(len(P)-1):
+            b.append(f(t, i, P))
+        a.append([*b, -sum(b)])
     return a
 
+def leistung(t, i, P):
+    return P[i] + 0.3*P[i]*np.sin(t*(1 + 0.01*i))
 
-plot('nd', 400, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
+
+
+calc('nd', 200, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
