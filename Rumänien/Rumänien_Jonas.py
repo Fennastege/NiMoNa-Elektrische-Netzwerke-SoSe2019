@@ -49,7 +49,7 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
     axs[1].plot(np.sin(an), np.cos(an)) #Kreis zeichnen
     for m,j,l in zip(*sp.find(adjamatrix)): #Verbindungslinien zeichnen
         axs[0].plot([posmatrix[m][0], posmatrix[j][0]], [posmatrix[m][1], posmatrix[j][1]], "-", color="black",linewidth=1*l)
-    axs[0].imshow(mpimg.imread('deutschland.png'), extent=[0, 7, 0, 7])
+    axs[0].imshow(mpimg.imread('deutschland.png'), extent=[-3, 17, 0, 20])
     plt.draw()
     plt.show(block=False)
     for t in range(0, int(T/h)):#ueber die Zeitschritte iterieren
@@ -118,7 +118,7 @@ def init(net):
     elif(net=='nd'):
         K = adj([5], [4], [5, 6], [6, 7], [1, 3, 10], [3, 4, 7, 10], [4, 6, 8, 15], [7], [10], [5, 9, 11], [10, 13, 18], [13], [11, 12, 16], [15, 16], [7, 14], [13, 14, 17], [16], [11])
         P = [0.5, 0.5, -1, -1, -1, -1, 1, -1, 1, -1, -1, -1, 1, 1, 1, 0.5, 0.5, 1]
-        pos = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [2, 6], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [3, 6]]
+        pos = np.load("saves/dtpos.npy")
     else: sys.exit('Unknown Net')
 
     return K, P, pos, p
