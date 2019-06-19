@@ -1,26 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
+import sys
 
-def kuramoto(x, args):
-    """Kuramoto Gleichungen mit Reibungstherm. phasen sind die Phasen, frequenz die Frequenzen und args=[K, P],
-    wobei K die Adjazenzmatrix ist und P die Leistungen.
+def kuramoto(x, nr, K, P, Pn):
+    """Kuramoto Gleichungen mit Reibungstherm.
     Der Rückgabewert sind die Differenzialgleichung für Phasen und Frequenz"""
     phasen, frequenz = x
-    K, P = args
+    if nr==4: P = Pn
+    elif not nr == 1: P = np.divide(np.add(P, Pn), 2) 
     summe = np.zeros(len(phasen))#Initialisieren des Summenvektors
     for m,j,l in zip(*sp.find(K)):#Fuer alle Eintraege von K die nicht 0 sind
         summe[m] +=5.0*l*np.sin(phasen[j]-phasen[m]) #Auf die Summe addieren
     return np.array([frequenz, P - 0.1*frequenz + summe]) #Die Differentialgleichungen zurückgeben  
 
 
-def rk4(f, x, h, args=[]):
+def rk4(f, x, h, *args):
     """Runge-Kutta 4 Verfahren für Differenzialgleichungen in f mit Vektoriellen x-Werten,
-    Schrittweite h und eventuell weitere für die Funktion wichtige Parameter als array in args übergeben"""
-    k1 = f(x, args)
-    k2 = f(x + h/2*k1, args)
-    k3 = f(x + h/2*k2, args)
-    k4 = f(x + h*k3, args)
+    Schrittweite h und eventuell weitere für die Funktion wichtige Parameter"""
+    k1 = f(x, 1, *args)
+    k2 = f(x + h/2*k1, 2, *args)
+    k3 = f(x + h/2*k2, 3, *args)
+    k4 = f(x + h*k3, 4, *args)
     return x + h/6*(k1 + 2*k2 + 2*k3 + k4) #Neue Werte nach dem Runge-Kutta 4 Vervahren zurückgeben
 
 
@@ -38,7 +39,7 @@ def o(p):
     return r, phi_c, phi_s
 
 
-def plotphi(phi, h, T, skip, adjamatrix, posmatrix):
+def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
     """phi ist die Matrix der Phasen zu allen Zeitpunkten, h die Schrittweite, T die Simulationsdauer 
     und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     _, axs = plt.subplots(1, 2, figsize=(13, 6)) #erzeugt zwei Bilder nebeneinander
@@ -55,16 +56,12 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix):
             pfeil = axs[1].arrow(0, 0, r*np.sin(winkel_s), r*np.cos(winkel_c), head_width=0.05)#Pfeil zeichnen
             points = []
             for i in range(len(phi[t])):
-                if( (abs(np.cos(phi[t][i])-np.cos(winkel_c)) <0.1) and (abs(np.sin(phi[t][i])-np.sin(winkel_s)) <0.1) and (r > 0.8) ):
-                    p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), "ro")#Punkt einzeichnen
-                    points.append(p)
-                    p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], "ro")#Punkt einzeichnen
-                    points.append(p)
-                else:
-                    p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), "bo")#Punkt einzeichnen
-                    points.append(p)
-                    p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], "bo")#Punkt einzeichnen
-                    points.append(p)
+                farbe = "r" if (abs(np.cos(phi[t][i])-np.cos(winkel_c)) <0.1) and (abs(np.sin(phi[t][i])-np.sin(winkel_s)) <0.1) and (r > 0.8) else "b"
+                punktart = farbe + "o" if P[t][i]<0 else farbe + "s"
+                p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), punktart)#Punkt in Kreis einzeichnen
+                points.append(p)
+                p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], punktart, markersize=100*abs(P[t][i]))#Punkt einzeichnen
+                points.append(p)
             plt.draw()#Zeichnen
             plt.pause(0.01)#Warten
             for point in points:
@@ -74,14 +71,14 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix):
 
 def netz(T, h, K, P, pos):
     """T ist die Simulationsdauer, h die Schrittweite, K die Adjazenzmatrix und P der Lesitungsvektor"""
-    phi = np.zeros(((int)(T/h), len(P))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
-    phipunkt = np.zeros(((int)(T/h), len(P))) #Phipunkt hat die gleiche Form
-    phi[0] = np.random.random(len(P))*2*np.pi #Anfangswinkel werden normalverteilt
-    phipunkt[0] = 0.1*np.random.standard_cauchy(len(P)) #Anfangsfrequenzen sind normalverteilt
+    phi = np.zeros(((int)(T/h), len(P[0]))) #Phi hat die Form einer Matrix bei der der erste Indize den Zeitpunkt und der zweite den Oszilator angibt
+    phipunkt = np.zeros(((int)(T/h), len(P[0]))) #Phipunkt hat die gleiche Form
+    phi[0] = np.random.random(len(P[0]))*2*np.pi #Anfangswinkel werden normalverteilt
+    phipunkt[0] = 0.1*np.random.standard_cauchy(len(P[0])) #Anfangsfrequenzen sind normalverteilt
     pro = 0 #Prozentzahl des Aktuellen Berechnungsfortschritts
     mess = 0 #Prozentzahl, bei der die letzte Benachrichtigung geprinted wurde
     for i in range(1, int(T/h)):
-        phi[i], phipunkt[i] = rk4(kuramoto, [phi[i-1], phipunkt[i-1]], h, [K, P]) #Berechnen der nächsten Werte
+        phi[i], phipunkt[i] = rk4(kuramoto, [phi[i-1], phipunkt[i-1]], h, K, P[i], P[i+1]) #Berechnen der nächsten Werte
         pro = 100*(i*h/T) #Aktuellen Fortschritt errechnen
         if (mess + 1 < pro): #ueberpruefen, ob eine neue Nachricht geprinted werden soll
             print(str(round(pro, 0))+"% Fortschritt")
@@ -92,6 +89,7 @@ def netz(T, h, K, P, pos):
 
 
 def init(net): 
+    p = lambda P, T, h, *args: [P]*(int)(T/h + 1) if(len(np.shape(P))==1) else P
     if(net=='rumänien'):
         ad = np.load('saves/romAdj.npy')#Laden der Adjazenzmatrix
         K=sp.csr_matrix(ad)
@@ -102,33 +100,48 @@ def init(net):
             else:
                 P[i]=1.0
         pos = np.load('saves/romPos.npy')
-    if(net=='n11'):
+    elif(net=='n11' or net=='n11_var'):
         K = [[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
             [0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ]
         P = [-0.1, -0.05, -0.1, -0.05, -0.35, -0.1, -0.2, -0.05, 0.3, 0.5, 0.2]
         pos = [[1.5, 3], [3.5, 3], [4, 2.5], [4, 1.5], [3.5, 1], [1.5, 1], [1, 1.5], [1, 2.5], [2, 2], [3, 2], [2, 4]]
-    if(net=='n3'):
+        if(net=='n11_var'): p = randps
+    elif(net=='n3'):
         K = [[0, 1, 1], [1, 0, 0], [1, 0, 0]]
         P = [1, -0.3, -0.7]
         pos = [[1, 1], [1, 2], [2, 1.5]]
-    return K, P, pos
+    else: sys.exit('Unknown Net')
+
+    return K, P, pos, p
 
 
 def calc(net, T, h, skip=-1):
     if(skip==-1): skip=T
-    K, P, pos = init(net)
+    K, P, pos, p = init(net)
+    P = p(T, h, P)
     phi = netz(T, h, K, P, pos)#Hauptfunktion mit entsprechenden Werten aufrufen
     np.save('saves/' + net + '.npy', phi)#Speichern
-    plotphi(phi, h, T, skip, K, pos)#Plotten der Ergebnisse
+    plotphi(phi, h, T, skip, K, pos, P)#Plotten der Ergebnisse
 
 
 def plot(net, T, h, skip=-1):
     if(skip==-1): skip=T
-    K, _, pos = init(net)
+    K, P, pos, p = init(net)
+    P = p(T, h, P)
     phi = np.load('saves/' + net + '.npy')
-    plotphi(phi, h, T, skip, K, pos)
+    plotphi(phi, h, T, skip, K, pos, P)
 
 
-calc('rumänien', 100, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
+def randps(T, h, P):
+    a = [P]
+    for t in range((int)(T/h) + 1):
+        b = []
+        for i in range(8):
+            b.append(abs(np.cos(t*i + i)*P[i]))
+        a.append([*b ,P[9], P[10], sum([*b ,P[9], P[10]])])  
+    return a
+
+
+calc('n11_var', 100, 0.01)#Hauptfunktion mit entsprechenden Werten aufrufen
