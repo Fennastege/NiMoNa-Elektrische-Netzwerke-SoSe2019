@@ -21,6 +21,11 @@
 #    - bei Plotten von Verbindungslinie: Dicke mit l multipliziert (Wert der Adjazenzmatrix)
 #    - Kopplung angepasst (vgl Paper: K > P0, damit Netz synchronisiert)
 
+# Update 20.Juni:
+#   - Synchronisationsabfrage gebastelt
+#   - Berechnung der Gesamtlänge eingebaut
+#   -
+
 # -------------------------------------------------------------------
 
 # ## Wichtige Infos:
@@ -67,20 +72,22 @@ bildname = "test_tim"
 #Anzahl der Maximal-Schritte der Simulation
 anzahlschritte = 150000
 #Nach wievielen Schritten ein Bild gespeichert werden soll:
-output = 1000
+output = 500
 
 #Schrittweite in der Zeit
 dt = 0.01
 
+#Synchronisationsgrenze (zwischen 0 und 1 - Abbruchbedingung)
+synchrogrenze = 0.999
 
 #-------------------------- 
 #MODELLPARAMETER
 
 #Adjazenz-Matrix laden
-adjazenzmatrix = np.load("adjamat2_h.npy")
+adjazenzmatrix = np.load("romAdj.npy")
 
 #Positions-Matrix laden
-position = np.load("posmat2_h.npy")
+position = np.load("romPos.npy")
 
 #Anzahl der Oszillatoren (berechnen aus Größe der Adjazenzmatrix)
 N = len(adjazenzmatrix[0])
@@ -167,6 +174,8 @@ def iniLeistung():
 # 2. Kuramoto-Funktion
 # 3. Runge-Kutta-Verfahren
 # 4. Zeichnungsfunktion
+# 5. Distanzermittlung
+# 6. Synchronisationsabfrage
 
 # -------------------------------------------------------------------
 
@@ -284,8 +293,46 @@ def zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = True)
     plt.show(block=False)
 
     plt.pause(0.01)
+    
+# -------------------------------------------------------------------
+    #5. Distanzberechnung
+def distanz(adjmat, posmat):
+    
+    Einheit = 24/100 # Skala der Karte in km
+    N=len(posmat)
+    
+    Sum = 0
+    for i in range(N):
+        for j in range(i):
+            
+            if (adjmat[i,j]==0): #falls Adjazenzmatrix null (kein Kabel)
+                a = 0
+            else:
+                a = np.sqrt((posmat[j,0] - posmat[i,0])**2 + (posmat[j,1] - posmat[i,1])**2)
+            Sum = Sum + a
+            
+    Laenge = Sum * Einheit
+    np.save("gesamtlaenge.npy", Laenge)
+    
+    print("Gesamtlänge:",round(Laenge,3)," km") #Gesamtlaenge der benötigten Leitung in km
+    
+# -------------------------------------------------------------------
+    #6. Synchronisationsabfrage
 
-
+def synchronisierungsabfrage(theta_jetzt,theta_alt, theta_alt_alt, synchrobedingung):
+    #Differenz berechnen
+    delta_theta = abs(theta_jetzt[:,0]-theta_alt[:,0])
+    delta_theta_alt = abs(theta_alt[:,0]-theta_alt_alt[:,0])
+    N = len(theta[:,0])
+    sync = np.array([False]*N)
+    
+    for o in range(0,N):
+            #überprüfen ob 
+            if (abs(delta_theta_alt[o] - delta_theta[o]) <= synchrobedingung):
+                sync[o] = True
+    
+    return sync
+    
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
 
@@ -302,7 +349,8 @@ def zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = True)
 #dann alles andere zurücksetzen
 initialisieren()
 
-
+#Länge berechnen und abspeichern
+distanz(adjazenzmatrix,position)
 
 #Um Bilder in Ordnern zu speichern:
 tm = time.gmtime()
@@ -317,7 +365,8 @@ np.save(path+"/pos_start.npy",position)
 
 #zurücksetzen für Prozentanzeige
 zaehler = 0
-
+#Zurücksetzen für Abbruchbedingung
+gespeichert = False
 
 
 
@@ -335,33 +384,50 @@ for i in range(0,anzahlschritte):
     #berechne nun die neuen Theta
     theta = rungekutta4(kuramoto,theta,dt, P,zipd_adja)
     
+    
 
     if (i%(output/10) == 0): #um Zwischenstand anzuzeigen
         print(zaehler,"%")
         zaehler += 10
-    if (i%output == 0): #um Bilder zu plotten
+        
+    
+    if (i == 0):
+        #Ordnungsparameter berechnen
+        r, phi = ordnung(N,theta)
+        print("Synchro am Anfang:", round(r,5))
+        
+        #Zeichnen
+        zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = False)
+        
+    elif (i%output == (output-2)):
+        theta_temp_2 = theta
+    elif (i%output == (output-1)):
+        theta_temp_1 = theta
+    elif (i%output == 0 and i != 0): #um Bilder zu plotten
         zaehler = 0
         
         #Ordnungsparameter berechnen
         r, phi = ordnung(N,theta)
         print("Synchro:", round(r,5))
         
-        if r >= 0.99998:
-            i = anzahlschritte #Abbruchbedingung, falls genug synchronisiert
+        #---------------------------------
+        #SYNCHRONISIERUNG
+        #überprüfen mit Toleranzgrenze (hinterste Zahl in der Funktion)
+        synchronisiert = synchronisierungsabfrage(theta,theta_temp_1,theta_temp_2,0.0001)
         
-        #Synchronisation ermitteln
-        for o in range(0,N):
-            #überprüfen ob 
-            if (abs(theta_temp[o,1]- theta[o,1]) <= (0.00001*output) and r>0.8): #(die synchronisierungsbedingung sollte man sich vlt nochmal anschauen)
-                synchronisiert[o] = True
-            else:
-                synchronisiert[o] = False
-
-        #theta_temp auf theta setzen für den nächsten Vergleich
-        theta_temp = theta
-        
-        #---------------
+        #---------------------------------
         #PLOTTEN
         
         #Zeichnen
-        zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path)
+        zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = False)
+        
+        #---------------------------------
+        #ABBRUCH
+        #zum Abspeichern des Synchronisierten Zustandes
+        if synchronisiert.all(): 
+            np.save(path+"/synchronisierter_zustand_theta.npy",theta)
+            np.save(path+"/synchronisierter_zustand_leistung.npy",P)
+            gespeichert = True
+        #Abbruchbedingung, falls genug synchronisiert 
+        if gespeichert and r >= synchrogrenze:
+                break 
