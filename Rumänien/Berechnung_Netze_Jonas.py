@@ -184,4 +184,4 @@ def makevideo(net, T, h, skip=1):
     plotphi(phi, h, T, skip, K, pos, P, show=False)
 
 
-makevideo('nd', 300, 0.01, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
+plot('nd', 300, 0.01, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
