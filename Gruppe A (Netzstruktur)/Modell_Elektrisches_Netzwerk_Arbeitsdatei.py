@@ -21,6 +21,11 @@
 #    - bei Plotten von Verbindungslinie: Dicke mit l multipliziert (Wert der Adjazenzmatrix)
 #    - Kopplung angepasst (vgl Paper: K > P0, damit Netz synchronisiert)
 
+# Update 20.Juni:
+#   - Synchronisationsabfrage gebastelt
+#   - Berechnung der Gesamtlänge eingebaut
+#   -
+
 # -------------------------------------------------------------------
 
 # ## Wichtige Infos:
@@ -47,7 +52,7 @@ import os
 
 
 #Nummer des Durchlaufs oder Name definieren (für Abspeicherung der Bilder)
-bildname = "test_tim"
+bildname = "test_nrw_adja1"
 #Ordner erstellen für diesen Namen
 #os.mkdir("video/"+bildname)
 
@@ -67,20 +72,28 @@ bildname = "test_tim"
 #Anzahl der Maximal-Schritte der Simulation
 anzahlschritte = 150000
 #Nach wievielen Schritten ein Bild gespeichert werden soll:
-output = 1000
+output = 25
 
 #Schrittweite in der Zeit
 dt = 0.01
 
+#Synchronisationsgrenze (zwischen 0 und 1 - Abbruchbedingung)
+synchrogrenze = 0.999
+
+#Toleranz der Synchronisation
+synchronisiert_toleranz = 0.0001
+
+#WAS WIRD UNTERSUCHT: (Kaskaden oder synchronisierung)
+kaskadenuntersuchung = True
 
 #-------------------------- 
 #MODELLPARAMETER
 
 #Adjazenz-Matrix laden
-adjazenzmatrix = np.load("adjamat2_h.npy")
+adjazenzmatrix = np.load("adjamat_nrw_1.npy")
 
 #Positions-Matrix laden
-position = np.load("posmat2_h.npy")
+position = np.load("posmat_nrw_64.npy")
 
 #Anzahl der Oszillatoren (berechnen aus Größe der Adjazenzmatrix)
 N = len(adjazenzmatrix[0])
@@ -95,7 +108,15 @@ alpha = 0.1
 #Leistung P(j) (kann auch wie Adjazenzmatrix eingelesen werden)
 P = np.array([0.]*N) #np.load("Leistung.npy")
 
+#Kaskadenausfälle: Obergrenze für theta_j - theta_i (Relativ zur Kopplung an der Leitung)
+max_Last_Faktor = 1/Kopplung * 0.1
 
+#Kaskadenausfälle: Farben zur Darstellung der Last auf jeder Leitung
+heatmap_colors = ["black", "black", "black", "black", "yellow", "orange", "orangered", "red", "red"]
+
+
+adjazenzmatrix[0,2] = 0
+adjazenzmatrix[2,0] = 0
 
 #------------------------------
 #WEITERE GRUNDVARIABLEN
@@ -104,10 +125,15 @@ P = np.array([0.]*N) #np.load("Leistung.npy")
 
 #Array für Thetas erstellen (jeweils mit zwei Einträgen pro Oszillator)
 theta = np.ndarray(shape=(N,2))
-theta_temp = np.ndarray(shape=(N,2)) #hilfsmatrix um synchronisation zu berechnen
+#falls Kaskadenausfall untersucht werden soll:
 
 #Synchronisations-Array
-synchronisiert = np.array([False]*N)
+if kaskadenuntersuchung:
+    synchronisiert = np.array([True]*N)
+    theta = np.load("synchronisierter_zustand_theta.npy")
+    P = np.load("synchronisierter_zustand_leistung.npy")
+else:
+    synchronisiert = np.array([False]*N)
 
 
 # -------------------------------------------------------------------
@@ -139,7 +165,7 @@ def initialisieren():
 #Funktion um Leistung zu verteilen (überflüssig wenn P-Array festgelegt wird!)
 def iniLeistung():
     #Leistung festsetzen
-    v = 1
+    v = 0.1
     for i in range(0,N):
         P[i] = v
         v = v * -1
@@ -167,7 +193,14 @@ def iniLeistung():
 # 2. Kuramoto-Funktion
 # 3. Runge-Kutta-Verfahren
 # 4. Zeichnungsfunktion
-
+# 5. Distanzermittlung
+# 6. Synchronisationsabfrage
+# 7. a last_quotient
+#    b lastTest
+# 8. ClusterKoeffizient
+#   a lokal
+#   b global
+        
 # -------------------------------------------------------------------
 
 
@@ -187,7 +220,7 @@ def ordnung(N,theta):
     tempIm = tempIm / N
     
     #r und Phi berechnen
-    r = (tempIm**2 + tempRe**2)**(1/2)
+    r = np.sqrt(tempIm**2 + tempRe**2)
     
     #Fallunterscheidung um phi richtig zu berechnen
     if (tempIm >= 0):
@@ -265,8 +298,13 @@ def zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = True)
     j=0
     l=0
     for m,j,l in zip(*sp.find(adjazenzmatrix)):
-        axs[0].plot(position[[m,j],0],position[[m,j],1], "-", color="black",linewidth=1.05*l)
-
+        #Berechne Eintrag im Farbenarray über lastTest() und plotte Verbindungslinien:
+        lastQuotient = last_quotient(theta, m, j, l)
+        last_index = int((len(heatmap_colors)-1)*lastQuotient)
+        if np.abs(lastQuotient) <= 1:
+            axs[0].plot(position[[m,j],0],position[[m,j],1], "-", color=heatmap_colors[last_index],linewidth=1.05*l)
+        else:
+            axs[0].plot(position[[m,j],0],position[[m,j],1], "--", color="grey",linewidth=1.05*l)
 
     #Schleife um alle Punkte (Oszillatoren) zu plotten
     for l in range(0,N):
@@ -284,6 +322,98 @@ def zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = True)
     plt.show(block=False)
 
     plt.pause(0.01)
+    
+# -------------------------------------------------------------------
+    #5. Distanzberechnung
+def distanz(adjmat, posmat):
+    
+    Einheit = 24/100 # Skala der Karte in km
+    N=len(posmat)
+    
+    Sum = 0
+    for i in range(N):
+        for j in range(i):
+            
+            if (adjmat[i,j]==0): #falls Adjazenzmatrix null (kein Kabel)
+                a = 0
+            else:
+                a = np.sqrt((posmat[j,0] - posmat[i,0])**2 + (posmat[j,1] - posmat[i,1])**2)
+            Sum = Sum + a
+            
+    Laenge = Sum * Einheit
+    
+    print("Gesamtlänge:",round(Laenge,1)," km") #Gesamtlaenge der benötigten Leitung in km
+    
+    return Laenge
+    
+# -------------------------------------------------------------------
+    #6. Synchronisationsabfrage
+
+def synchronisierungsabfrage(theta_jetzt,theta_alt, theta_alt_alt, synchrobedingung):
+    #Differenz berechnen
+    delta_theta = abs(theta_jetzt[:,0]-theta_alt[:,0])
+    delta_theta_alt = abs(theta_alt[:,0]-theta_alt_alt[:,0])
+    N = len(theta[:,0])
+    sync = np.array([False]*N)
+    
+    for o in range(0,N):
+            #überprüfen ob 
+            if (abs(delta_theta_alt[o] - delta_theta[o]) <= synchrobedingung):
+                sync[o] = True
+    
+    return sync
+
+# -------------------------------------------------------------------
+    #7. Kaskadenausfälle
+    
+    # a 
+    
+#Gibt Quotient zwischen Last und maximaler Last der Leitung 
+#zwischen m-ten und j-ten Oszillator aus, auf eine Nachkommastelle gerundet. (l: Kopplungsgrad der Leitung)
+def last_quotient(theta, m, j, l):
+    LastQuotient = (np.sin(np.abs(theta[m][0] - theta[j][0])) / (max_Last_Faktor * np.abs(l) * Kopplung))
+    return LastQuotient
+    
+    # b
+
+#Überprüft die Last aller Leitungen und passt ggf. die Adjazenzmatrix an.
+def lastTest(theta, adj):
+    a = 0
+    b = 0
+    c = 0
+    for a,b,c in zip(*sp.find(adj)):
+        if last_quotient(theta, a, b, c) > 1:
+            adj[a,b] = 0
+            print("GAU:",a,b)
+    return adj
+
+
+# -------------------------------------------------------------------
+    #7. ClusterKoeffizient
+
+def clusterLokal(adj,i):
+    nachbarn = np.array([])
+    #spalte = 0
+    anzVerb = 0
+    #Nachbarn bestimmen
+    for spalte in range(0,len(adj)):
+        if (adj[i,spalte] != 0):
+            nachbarn = np.append(nachbarn,spalte)
+    #Verbindungen der Nachbarn bestimmen
+    for m,j,l in zip(*sp.find(adj)):
+        if m in nachbarn and j in nachbarn:
+            anzVerb = anzVerb + 0.5
+    
+    if len(nachbarn) < 2:
+        return 0
+    else:
+        return 2 * anzVerb / (len(nachbarn) * (len(nachbarn) - 1))
+
+def clusterGlobal(clusterLokal,adj):
+    summe = 0
+    for k in range(0,len(adj)):
+        summe += clusterLokal(adj,k)
+    return summe/len(adj)
 
 
 # -------------------------------------------------------------------
@@ -300,13 +430,19 @@ def zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = True)
 #VORBEREITEN
 
 #dann alles andere zurücksetzen
-initialisieren()
-
-
-
+if kaskadenuntersuchung == False:
+    initialisieren()
+    #iniLeistung()
+    #Länge berechnen und abspeichern
+    laenge = distanz(adjazenzmatrix,position)
+    cluster = clusterGlobal(clusterLokal,adjazenzmatrix)
+    
+    text = "synchro"
+else:
+    text = "kaskaden"
 #Um Bilder in Ordnern zu speichern:
 tm = time.gmtime()
-path = "video/"+bildname+"/"+str(tm.tm_mon)+"-"+str(tm.tm_mday)+"-"+str(tm.tm_hour+2)+str(tm.tm_min)+str(tm.tm_sec)
+path = "video/"+bildname+"/"+str(tm.tm_mon)+"-"+str(tm.tm_mday)+"-"+str(tm.tm_hour+2)+str(tm.tm_min)+str(tm.tm_sec)+"_"+text
 os.mkdir(path)
 #falls benötigt: Anfangswerte werden gespeichert
 np.save(path+"/theta_start.npy",theta)
@@ -317,11 +453,22 @@ np.save(path+"/pos_start.npy",position)
 
 #zurücksetzen für Prozentanzeige
 zaehler = 0
+#Zurücksetzen für Abbruchbedingung
+gespeichert = False
+
+#------------------
+#Bild zuerst einmal Plotten
+
+#Ordnungsparameter berechnen
+r, phi = ordnung(N,theta)
+print("Synchro am Anfang:", round(r,5))
+
+i = -1
+#Zeichnen
+zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = False)
 
 
-
-
-
+#------------------
 #dann berechnen
 for i in range(0,anzahlschritte):
 
@@ -332,36 +479,61 @@ for i in range(0,anzahlschritte):
     #um zeit zu verringern: berechne zip-funktion:
     zipd_adja = zip(*sp.find(adjazenzmatrix))
     
+    if kaskadenuntersuchung:
+        #Überprüfe, ob Leitungen ausfallen:
+        adjazenzmatrix = lastTest(theta, adjazenzmatrix)
+    
     #berechne nun die neuen Theta
     theta = rungekutta4(kuramoto,theta,dt, P,zipd_adja)
     
 
-    if (i%(output/10) == 0): #um Zwischenstand anzuzeigen
+
+    #------------------
+    #IN BESTIMMTEN FÄLLEN PASSIERT ETWAS:
+
+    if (i%(output/10) == 0): #um Zwischenstand anzuzeigen und r und phi zwischendurch zu berechnen
         print(zaehler,"%")
         zaehler += 10
-    if (i%output == 0): #um Bilder zu plotten
+        
+        if kaskadenuntersuchung == False:
+            r, phi = ordnung(N,theta)
+        
+
+        
+    if (i%output == (output-2)):
+        theta_temp_2 = theta
+    elif (i%output == (output-1)):
+        theta_temp_1 = theta
+    elif (i%output == 0 and i != 0): #um Bilder zu plotten
         zaehler = 0
         
         #Ordnungsparameter berechnen
         r, phi = ordnung(N,theta)
         print("Synchro:", round(r,5))
         
-        if r >= 0.99998:
-            i = anzahlschritte #Abbruchbedingung, falls genug synchronisiert
+        #---------------------------------
+        #SYNCHRONISIERUNG
+        #überprüfen mit Toleranzgrenze (hinterste Zahl in der Funktion)
+        synchronisiert = synchronisierungsabfrage(theta,theta_temp_1,theta_temp_2,synchronisiert_toleranz)
         
-        #Synchronisation ermitteln
-        for o in range(0,N):
-            #überprüfen ob 
-            if (abs(theta_temp[o,1]- theta[o,1]) <= (0.00001*output) and r>0.8): #(die synchronisierungsbedingung sollte man sich vlt nochmal anschauen)
-                synchronisiert[o] = True
-            else:
-                synchronisiert[o] = False
-
-        #theta_temp auf theta setzen für den nächsten Vergleich
-        theta_temp = theta
-        
-        #---------------
+        #---------------------------------
         #PLOTTEN
         
         #Zeichnen
-        zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path)
+        zeichne(theta, r, phi, synchronisiert, adjazenzmatrix, path, nummern = False)
+        
+        #---------------------------------
+        #ABBRUCH
+        #zum Abspeichern des Synchronisierten Zustandes
+        if synchronisiert.all() and kaskadenuntersuchung == False: 
+            np.save(path+"/synchronisierter_zustand_theta.npy",theta)
+            np.save(path+"/synchronisierter_zustand_leistung.npy",P)
+            gespeichert = True
+    #Abbruchbedingung, falls genug synchronisiert
+    if gespeichert and r >= synchrogrenze and kaskadenuntersuchung == False:
+        break 
+            
+
+#GESAMTERGEBNISSE SPEICHERN
+if kaskadenuntersuchung == False:
+    np.savetxt(path+"/ergebnisse.txt",[laenge,i*dt, cluster],header="Gesamtergebnisse \n \n 1. Länge \n 2. Synchronisationsdauer \n 3. Globaler Clusterkoeffizient", comments="")
