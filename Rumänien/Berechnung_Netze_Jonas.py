@@ -41,7 +41,7 @@ def o(p):
     return r, phi_c, phi_s
 
 
-def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
+def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P, show=True, vidnr=1):
     """phi ist die Matrix der Phasen zu allen Zeitpunkten, h die Schrittweite, T die Simulationsdauer 
     und skip gibt an jeder wievielte Zeitschritt gezeichnet werden soll"""
     _, axs = plt.subplots(1, 2, figsize=(13, 6)) #erzeugt zwei Bilder nebeneinander
@@ -51,7 +51,7 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
         axs[0].plot([posmatrix[m][0], posmatrix[j][0]], [posmatrix[m][1], posmatrix[j][1]], "-", color="black",linewidth=1*l)
     axs[0].imshow(mpimg.imread('deutschland.png'), extent=[-3, 17, 0, 20])
     plt.draw()
-    plt.show(block=False)
+    if show: plt.show(block=False)
     for t in range(0, int(T/h)):#ueber die Zeitschritte iterieren
         if(t%(skip)== 0):#Nur plotten, wenn t ein vielfaches von skip ist
             plt.title("t = " + str(round(h*t, 2)) + "s")#ueberschrift mit der Aktuellen Zeit erstellen
@@ -65,8 +65,12 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
                 points.append(p)
                 p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], punktart, markersize=10*abs(P[t][i]))#Punkt einzeichnen
                 points.append(p)
-            plt.draw()#Zeichnen
-            plt.pause(0.01)#Warten
+            if(show):
+                plt.draw()#Zeichnen
+                plt.pause(0.01)#Warten
+            else:
+                fileName = 'Videos/'+str(vidnr)+'/t_ist'+str(t*h)+'.png'
+                plt.savefig(fileName)
             for point in points:
                 point.pop(0).remove()#Entfernen der Alten Punkte
             pfeil.remove()#Entfernen des alten Pfeils
@@ -173,5 +177,11 @@ def leistung(t, i, P, h):
     return p
 
 
+def makevideo(net, T, h, skip=1):
+    K, P, pos, p = init(net)
+    P = p(T, h, P)
+    phi = np.load('saves/' + net + '.npy')
+    plotphi(phi, h, T, skip, K, pos, P, show=False)
 
-plot('nd', 300, 0.01, 50)#Hauptfunktion mit entsprechenden Werten aufrufen
+
+makevideo('nd', 300, 0.01, 10)#Hauptfunktion mit entsprechenden Werten aufrufen
