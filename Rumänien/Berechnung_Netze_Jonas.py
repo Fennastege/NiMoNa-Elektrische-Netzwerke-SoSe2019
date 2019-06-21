@@ -4,6 +4,7 @@ import scipy.sparse as sp
 import sys
 import matplotlib.image as mpimg
 import os
+import matplotlib.patches as patch
 
 def kuramoto(x, nr, K, P, Pn):
     """Kuramoto Gleichungen mit Reibungstherm.
@@ -58,17 +59,20 @@ def plotphi(phi, h, T, skip, adjamatrix, posmatrix, P):
             r, winkel_c, winkel_s = o(phi[t])#Ordnungsparameter bestimmen
             pfeil = axs[1].arrow(0, 0, r*np.sin(winkel_s), r*np.cos(winkel_c), head_width=0.05)#Pfeil zeichnen
             points = []
+            recs = []
             for i in range(len(phi[t])):
-                farbe = "r" if (abs(np.cos(phi[t][i])-np.cos(winkel_c)) <0.1) and (abs(np.sin(phi[t][i])-np.sin(winkel_s)) <0.1) and (r > 0.8) else "b"
-                punktart = farbe + "o" if P[t][i]<0 else farbe + "s"
-                p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), punktart)#Punkt in Kreis einzeichnen
+                farbe = "g" if (abs(np.cos(phi[t][i])-np.cos(winkel_c)) <0.1) and (abs(np.sin(phi[t][i])-np.sin(winkel_s)) <0.1) and (r > 0.8) else "r"
+                randfarbe = "y" if P[t][i]<0 else "b"
+                p = axs[1].plot(np.sin(phi[t][i]), np.cos(phi[t][i]), farbe + "o")#Punkt in Kreis einzeichnen
                 points.append(p)
-                p = axs[0].plot(posmatrix[i][0], posmatrix[i][1], punktart, markersize=10*abs(P[t][i]))#Punkt einzeichnen
-                points.append(p)
+                rec = axs[0].add_patch(patch.Rectangle((posmatrix[i][0], posmatrix[i][1]), 0.5*abs(P[t][i]), 0.5, facecolor=farbe, edgecolor=randfarbe, lw=1.5))#Punkt einzeichnen
+                recs.append(rec)
             plt.draw()#Zeichnen
             plt.pause(0.01)#Warten
             for point in points:
                 point.pop(0).remove()#Entfernen der Alten Punkte
+            for rec in recs:
+                rec.remove()
             pfeil.remove()#Entfernen des alten Pfeils
 
 
@@ -173,5 +177,4 @@ def leistung(t, i, P, h):
     return p
 
 
-
-plot('nd', 300, 0.01, 50)#Hauptfunktion mit entsprechenden Werten aufrufen
+plot('nd', 300, 0.01, 300)#Hauptfunktion mit entsprechenden Werten aufrufen
