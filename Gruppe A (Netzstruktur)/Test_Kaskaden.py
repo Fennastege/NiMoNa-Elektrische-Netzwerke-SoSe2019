@@ -10,7 +10,7 @@ import scipy.sparse as sp
 import Kaskadenausfall as kask
 
 adj = np.load("adjamat_nrw_1.npy")
-leistung = np.load("synchronisierter_zustand_leistung_mit_leistung.npy")
+leistung = np.load("synchronisierter_zustand_leistung.npy")
 theta = np.load("synchronisierter_zustand_theta.npy")
 
 anzahl = 95
@@ -20,14 +20,33 @@ synchron = np.array([None]*anzahl)
 ausgefallen = np.array([1]*anzahl)
 zeit = np.array([0.0]*anzahl)
 ordnungsding = np.array([0.0]*anzahl)
-
+welche_rausgenommen = np.ndarray(shape=(anzahl,2))
 
 Kopplungsgrad = 30
-maxlast = 0.001
-i = 1
+maxlast = 0.05
+i = 0
+
+#print(adj)
+k = 0
+l = 0
+
+#Deepcopy
+
+#synchron[i],ausgefallen[i],zeit[i],ordnungsding[i] = kask.modell_elektrisches_netzwerk(theta, adj, leistung, i_Ausfallleitung = k, j_Ausfallleitung = l, technische_maximallast = maxlast, Kopplung = Kopplungsgrad)
+#welche_rausgenommen[i,:] = [k,l]
+#print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],ordnungsding[i])
+#i += 1
 
 for k,l,m in zip(*sp.find(adj)):
-    if k <= l:
-        synchron[i],ausgefallen[i],zeit[i],ordnungsding[i] = kask.modell_elektrisches_netzwerk(theta, adj, leistung, i_Ausfallleitung = k, j_Ausfallleitung = l, technische_maximallast = maxlast, Kopplung = Kopplungsgrad)
-        print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],ordnungsding[i])
-        i += 1
+    if i >= (anzahl-1):
+        exit
+    else:
+        if k >= l:
+            #print("vor",adj)
+            synchron[i],ausgefallen[i],zeit[i],ordnungsding[i] = kask.modell_elektrisches_netzwerk(theta, adja = np.load("adjamat_nrw_1.npy"), Leistung = leistung, i_Ausfallleitung = k, j_Ausfallleitung = l, technische_maximallast = maxlast, Kopplung = Kopplungsgrad)
+            #print("danach",adj)
+            welche_rausgenommen[i,:] = [k,l]
+            print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],ordnungsding[i])
+            i += 1
+
+#np.savetxt("ergebnisse.txt",[welche_rausgenommen[:,0],welche_rausgenommen[:,1],synchron,ausgefallen,zeit,ordnungsding],header="Gesamtergebnisse \n Verbindung | Synchronisiert | Wie viele Oszis ausgefallen | Dauer der Simulation (in s) | Ordnungsparameter am Ende")

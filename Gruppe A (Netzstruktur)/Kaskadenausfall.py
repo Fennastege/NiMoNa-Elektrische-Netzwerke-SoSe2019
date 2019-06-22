@@ -44,7 +44,9 @@
     
 #Importiere mehrere Packages
 import numpy as np
-import scipy.sparse as sp
+import scipy.sparse as sp#für Ordnerstruktur
+
+
 #für Ordnerstruktur
 
 def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung, j_Ausfallleitung, Anzahl_ausfallgrenze_Leitungen = 5, technische_maximallast = 0.1, Kopplung = 30, genauigkeit_output = 500, synchrogrenze = 0.999, synchronisiert_toleranz = 0.0001):
@@ -70,7 +72,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
         4. Ordnungsparameter r
     '''
     
-    
+    #print(adja)
     
     # -------------------------------------------------------------------
     # -------------------------------------------------------------------
@@ -104,6 +106,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     
     #Adjazenz-Matrix laden
     adjazenzmatrix = adja
+    
     
     #Leitung fällt aus!!!
     adjazenzmatrix[i_Ausfallleitung,j_Ausfallleitung] = 0.0
@@ -250,22 +253,28 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     #Gibt Quotient zwischen Last und maximaler Last der Leitung 
     #zwischen m-ten und j-ten Oszillator aus, auf eine Nachkommastelle gerundet. (l: Kopplungsgrad der Leitung)
     def last_quotient(theta, m, j, l, max_Last_Faktor):
-        LastQuotient = (np.sin(np.abs(theta[m][0] - theta[j][0])) / (max_Last_Faktor * np.abs(l) * Kopplung))
+        LastQuotient = (np.sin(np.abs(theta[m,0] - theta[j,0])) / (max_Last_Faktor * np.abs(l) * Kopplung))
         return LastQuotient
         
         # b
     
     #Überprüft die Last aller Leitungen und passt ggf. die Adjazenzmatrix an.
-    def lastTest(theta, adj, max_Last_Faktor):
+    def lastTest(theta, adj_einzeln, max_Last_Faktor):
         a = 0
         b = 0
         c = 0
         veraendert = 0
-        for a,b,c in zip(*sp.find(adj)):
+        #print("davor",adj_einzeln)
+        for a,b,c in zip(*sp.find(adj_einzeln)):
             if last_quotient(theta, a, b, c, max_Last_Faktor) > 1:
-                adj[a,b] = 0
+                #print(last_quotient(theta, a, b, c, max_Last_Faktor))
+                adj_einzeln[a,b] = 0
+                #print("schleife",a,b)
                 veraendert += 0.5
-        return adj, veraendert
+                #print("ver",veraendert)
+                #print("danach",adjazenzmatrix)         
+        
+        return adj_einzeln, veraendert
     
     
     # -------------------------------------------------------------------
@@ -283,20 +292,22 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     #dann berechnen
     for i in range(0,anzahlschritte):
     
-    
         #------------------
         #RECHNEN
         
-        #um zeit zu verringern: berechne zip-funktion:
-        zipd_adja = zip(*sp.find(adjazenzmatrix))
+
 
         adjazenzmatrix, neu_ausgefallen = lastTest(theta, adjazenzmatrix, max_Last_Faktor)
-        
+
         anzahl_ausgefallen += neu_ausgefallen
-    
+        
+        #um zeit zu verringern: berechne zip-funktion:
+        zipd_adja = zip(*sp.find(adjazenzmatrix))
+        #print("zip", adjazenzmatrix)
         #berechne nun die neuen Theta
         theta = rungekutta4(kuramoto,theta,dt, P,zipd_adja)
-    
+        
+        
         #------------------
         #IN BESTIMMTEN FÄLLEN PASSIERT ETWAS          
         if (i%output == (output-2)):

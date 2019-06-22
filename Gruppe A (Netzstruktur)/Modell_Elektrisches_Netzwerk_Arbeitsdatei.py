@@ -115,8 +115,8 @@ max_Last_Faktor = 1/Kopplung * 0.1
 heatmap_colors = ["black", "black", "black", "black", "yellow", "orange", "orangered", "red", "red"]
 
 
-adjazenzmatrix[0,2] = 0
-adjazenzmatrix[2,0] = 0
+adjazenzmatrix[1,2] = 0
+adjazenzmatrix[1,2] = 0
 
 #------------------------------
 #WEITERE GRUNDVARIABLEN
