@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 #für Ordnerstruktur
-import time 
+import time
 import os
 
 #Matrix für N Oszillatoren
@@ -38,4 +38,4 @@ if x==0:
     np.save("adjamat2_h.npy",adjamat1)
     np.save("posmat2_h.npy",posmat1)
 else:
-    print 'Fehler in Matrix'
+    print('Fehler in Matrix')

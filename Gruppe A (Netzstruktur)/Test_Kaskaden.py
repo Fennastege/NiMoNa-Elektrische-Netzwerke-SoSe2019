@@ -14,7 +14,7 @@ leistung = np.load("synchronisierter_zustand_leistung.npy")
 theta = np.load("synchronisierter_zustand_theta.npy")
 
 anzahl = 95
-# modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung, j_Ausfallleitung, Anzahl_ausfallgrenze_Leitungen = 5, technische_maximallast = 0.1, Kopplung = 30, 
+# modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung, j_Ausfallleitung, Anzahl_ausfallgrenze_Leitungen = 5, technische_maximallast = 0.1, Kopplung = 30,
 # genauigkeit_output = 500, synchrogrenze = 0.999, synchronisiert_toleranz = 0.0001):
 synchron = np.array([None]*anzahl)
 ausgefallen = np.array([1]*anzahl)
@@ -22,7 +22,7 @@ zeit = np.array([0.0]*anzahl)
 ordnungsding = np.array([0.0]*anzahl)
 welche_rausgenommen = np.ndarray(shape=(anzahl,2))
 
-Kopplungsgrad = 30
+Kopplungsgrad = 50
 maxlast = 0.05
 i = 0
 

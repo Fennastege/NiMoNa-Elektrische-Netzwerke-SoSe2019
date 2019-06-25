@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 #für Ordnerstruktur
-import time 
+import time
 import os
 
 
@@ -24,7 +24,7 @@ def init(connections):
     #N: Anzahl der Knoten
     N = len(connections)
     adjamat1 = np.full((N,N), 0)
-    
+
     i = 0
     for i in range(0,N):
         j = 0
@@ -35,8 +35,8 @@ def init(connections):
         i+=1
     return adjamat1
 
-#Zeichen Funktion zur Kontrolle       
-def zeichnen(adjamat1,postmat):     
+#Zeichen Funktion zur Kontrolle
+def zeichnen(adjamat1,postmat):
     m=0
     j=0
     l=0
@@ -46,15 +46,15 @@ def zeichnen(adjamat1,postmat):
     plt.figure(figsize=(10,10))
     for m,j,l in zip(*sp.find(adjamat1)):
         plt.plot(postmat[[m,j],0],postmat[[m,j],1], "-", color="black",linewidth=1.05*l)
-    for l in range(0,N):  
-        
+    for l in range(0,N):
+
         plt.plot(postmat[l,0],postmat[l,1],'o',color='blue',marker='.')
         plt.text(postmat[l,0],postmat[l,1],str(z),size='large')
         z+=1
-        
+
 #Eingabe der Connections
 Z1 = [3]
-Z2 = []]
+Z2 = []
 Z3 = []
 Z4 = []
 Z5 = []
