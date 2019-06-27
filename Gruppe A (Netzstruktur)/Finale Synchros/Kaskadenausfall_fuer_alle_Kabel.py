@@ -2,7 +2,6 @@
 """
 
 @author: Hauke
-
 Ziel des Programms:
 - explizites Durchrechnen von Kaskadenausfällen pro herausgenommenem Kabels
 - es wird angegeben, wie synchronisiert das System ist zu entsprechenden Zeit-
@@ -20,7 +19,7 @@ q = 4
 
 Kopplungsgrad = 50
 sync = 0.99
-maxlast = 0.15
+maxlast = 0.11
 
 
 path = "adja_" + Ordnername[q]
@@ -54,5 +53,5 @@ for k,l,m in zip(*sp.find(adj)):
             synchron[i],ausgefallen[i],zeit[i],ordnungsding[i] = kask.modell_elektrisches_netzwerk(theta,adja = np.load(path + "/adja_start.npy"), Leistung = leistung, i_Ausfallleitung = k, j_Ausfallleitung = l,technische_maximallast = maxlast, Kopplung = Kopplungsgrad, synchrogrenze=sync)
             #print("danach",adj)
             welche_rausgenommen[i,:] = [k,l]
-            print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],round(ordnungsding[i]),5)
+            print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],round(ordnungsding[i],5))
             i += 1
