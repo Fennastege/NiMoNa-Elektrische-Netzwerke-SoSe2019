@@ -1,0 +1,8 @@
+Gesamtergebnisse 
+ 
+ 1. Länge 
+ 2. Synchronisationsdauer 
+ 3. Globaler Clusterkoeffizient
+1.728929664737931453e+05
+1.400000000000000000e+02
+1.000000000000000000e+00
