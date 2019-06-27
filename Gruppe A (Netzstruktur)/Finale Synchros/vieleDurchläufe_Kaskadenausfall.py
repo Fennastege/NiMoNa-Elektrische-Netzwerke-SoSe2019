@@ -50,15 +50,23 @@ def TestKaskadenVieleAdj(maxlast, Ordnername):
                 i += 1
 
     numbers = np.array([np.sum(synchron==True), np.sum(synchron==False), np.sum(synchron==None)])
-    return numbers
+    return numbers.T
 
 # -----------------------------------------------------------------------------
 
 
 Ordnername = ["dezentral", "zentral", "flaechig", "random", "spinne"]
-TestMaxLast = np.arange(0.11, 0.11, 0.01)
+TestMaxLast = np.arange(0.08, 0.2, 0.01)
 q=0
-#for q in range(0,len(Ordnername)):
-for last in TestMaxLast:
-    kaskaden = TestKaskadenVieleAdj(last, Ordnername[q])
-    np.savetxt(Ordnername[q] + "_Kaskadenergebnisse.txt", kaskaden, fmt='%1.0f', delimiter='\t', header="True   False   None")
+
+for q in range(0,len(Ordnername)):
+    res_file=open( "adja_" + Ordnername[q]+"/res_" +Ordnername[q],"w")
+    res_file.write("#Last   True   False   None" + "\n")
+    for last in TestMaxLast:        
+        kaskaden = TestKaskadenVieleAdj(last, Ordnername[q])
+        res_file.write(str(last) +" ")
+        for n in range(0,3):
+            res_file.write(str(kaskaden[n]) + " ")
+        res_file.write("\n")
+    res_file.close()
+    
