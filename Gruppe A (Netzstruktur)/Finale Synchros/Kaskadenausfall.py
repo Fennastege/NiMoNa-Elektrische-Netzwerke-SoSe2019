@@ -295,7 +295,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
             theta_temp_1 = theta
         elif (i%output == 0 and i < output*3):
             r, phi = ordnung(N,theta)
-            #print(zaehler, anzahl_ausgefallen, round(r,5),np.sum(synchronisiert == True))
+            print(zaehler, anzahl_ausgefallen, round(r,5),np.sum(synchronisiert == True))
         elif (i%output == 0 and i >= output*3): #um Bilder zu plotten
 
             #Ordnungsparameter berechnen
@@ -306,7 +306,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
             #ueberpruefen mit Toleranzgrenze (hinterste Zahl in der Funktion)
             synchronisiert = synchronisierungsabfrage(theta,theta_temp_1,theta_temp_2,synchronisiert_toleranz)
 
-            #print(zaehler, anzahl_ausgefallen, round(r,5),np.sum(synchronisiert == True))
+            print(zaehler, anzahl_ausgefallen, round(r,5),np.sum(synchronisiert == True))
             zaehler += 1
 
 
