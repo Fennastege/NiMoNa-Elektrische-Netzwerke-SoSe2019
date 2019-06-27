@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 25 01:12:23 2019
 
 @author: Hauke
+
+Ziel des Programms:
+- explizites Durchrechnen von Kaskadenausfällen pro herausgenommenem Kabels
+- es wird angegeben, wie synchronisiert das System ist zu entsprechenden Zeit-
+punkten und es wird ausgegeben, wie viele Kabel ausgefallen sind
+
 """
 
 import numpy as np
@@ -51,7 +56,3 @@ for k,l,m in zip(*sp.find(adj)):
             welche_rausgenommen[i,:] = [k,l]
             print(" Nummer:",i," : ",k,"-",l,"||", synchron[i],ausgefallen[i],zeit[i],round(ordnungsding[i]),5)
             i += 1
-
-np.savetxt(path + "/Kaskadenausfall_ergebnisse.txt",[welche_rausgenommen[:,0],
-                welche_rausgenommen[:,1],synchron,ausgefallen,zeit,ordnungsding],
-                header="Gesamtergebnisse \n Verbindung | Synchronisiert | Wie viele Oszis ausgefallen | Dauer der Simulation (in s) | Ordnungsparameter am Ende")

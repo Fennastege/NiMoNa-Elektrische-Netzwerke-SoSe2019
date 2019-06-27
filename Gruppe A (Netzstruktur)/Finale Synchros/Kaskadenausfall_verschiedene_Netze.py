@@ -1,6 +1,12 @@
 '''
-Idee des Programms:
--
+@author: Hauke
+
+Ziel des Programms:
+- Schleifen zur Optimierung des maxLast-Faktors fuer verschiedenen Adjazenzmatrizen
+fuer jeweils alle moeglichen Kabelausfaelle
+- Ausgabe von Textdateien pro Adjazenzmatrix die pro maxLast-Faktor angeben, wie
+haeufig Kaskadenausfaelle passiert sind (Status FALSE). TRUE bedeutet, dass sich
+das Netz wieder gefangen hat
 '''
 import numpy as np
 # -----------------------------------------------------------------------------
@@ -62,11 +68,10 @@ q=0
 for q in range(0,len(Ordnername)):
     res_file=open( "adja_" + Ordnername[q]+"/res_" +Ordnername[q],"w")
     res_file.write("#Last   True   False   None" + "\n")
-    for last in TestMaxLast:        
+    for last in TestMaxLast:
         kaskaden = TestKaskadenVieleAdj(last, Ordnername[q])
         res_file.write(str(last) +" ")
         for n in range(0,3):
             res_file.write(str(kaskaden[n]) + " ")
         res_file.write("\n")
     res_file.close()
-    

@@ -1,31 +1,11 @@
 
-    # # Grundmodell
-    # ## Elektrisches Netzwerk
-
-    # Gruppe A
-    # Stand: 13.06.2019
-    # -------------------------------------------------------------------
-    #
-    # Verändert in dieser Version (10.-13.6.):
-    #    - gezippte Adajazenzmatrix nicht in Kuarmoto sondern in Main berechnet und übergeben
-    #    - P-Werte an Oszillatoren rangeschrieben
-    #    - synchronisiert-Variable auf richtige Boolean geändert! (-> Farben-Abfrage für Plot in zeichnen() vereinfacht)
-    #    - iniLeistung() angepasst je nach N (gerade oder ungerade)
-    #    - Pfeil beschriftet (r)
-    #    - Synchronisationsmindestdifferenz abhängig von Schrittzahl
-    #    - Bilder werden in Ordnern pro durchlauf gespeichert (vlt noch schöner machen?)
-    #    - Anfangs-Verteilung von theta wird gespeichert
-    #    - Reihenfolge der Initialisierungswerte vertauscht (insb. N)
-    #    - Alle Anfangswerte speichern (ergänzt in Main)
-    #    - Kuramoto-Gleichung wieder mit + gesetzt (damit synchronisiert)
-    #    - bei Plotten von Verbindungslinie: Dicke mit l multipliziert (Wert der Adjazenzmatrix)
-    #    - Kopplung angepasst (vgl Paper: K > P0, damit Netz synchronisiert)
-
-    # Update 20.Juni:
-    #   - Synchronisationsabfrage gebastelt
-    #   - Berechnung der Gesamtlänge eingebaut
-    #   -
-
+'''
+Basis-Modell fuer Kaskadenausfaelle
+    - enthaelt die Rechenarbeit aus dem grossen Modell
+    - es kann nicht geplottet werden
+    - gibt fuer eine Adjazenzmatrix und fuer ein entnommenes Kabel die Werte an
+'''
+'''
     # -------------------------------------------------------------------
 
     # ## Wichtige Infos:
@@ -33,8 +13,7 @@
     # ### theta[x,0]: Phase des Oszillators x (THETA)
     #
     # ### theta[x,1]: Ableitung der Phase des Oszillators x (THETA PUNKT)
-
-    # -------------------------------------------------------------------
+'''
     # -------------------------------------------------------------------
 
     # ## Teil 0 - Importieren von Packages und Festsetzen des Namens der Modulation
@@ -44,10 +23,10 @@
 
 #Importiere mehrere Packages
 import numpy as np
-import scipy.sparse as sp#für Ordnerstruktur
+import scipy.sparse as sp#fuer Ordnerstruktur
 
 
-#für Ordnerstruktur
+#fuer Ordnerstruktur
 
 def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung, j_Ausfallleitung, Anzahl_ausfallgrenze_Leitungen = 5, technische_maximallast = 0.1, Kopplung = 30, genauigkeit_output = 500, synchrogrenze = 0.999, synchronisiert_toleranz = 0.0001):
     '''
@@ -55,10 +34,10 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
         theta_anfang: synchronisierte Anfangsbedingung
         adja: Adjazenzmatrix
         Leistung: P (Matrix)
-        Kopplung: kopplungsstärke
+        Kopplung: kopplungsstaerke
         technische_maximallast: Ausfallgrenze eines Kabels
-        i_Ausfallleitung, j_Ausfallleitung: Oszillatoren zwischen denen Leitung ausfällt
-        Anzahl_ausfallgrenze_Leitungen: ab wann abgebrochen wird und Kaskadenausfall zurückgegeben wird
+        i_Ausfallleitung, j_Ausfallleitung: Oszillatoren zwischen denen Leitung ausfaellt
+        Anzahl_ausfallgrenze_Leitungen: ab wann abgebrochen wird und Kaskadenausfall zurueckgegeben wird
 
 
         genauigkeit_output: wie oft theoretisch Bild/Synchronisation berechnet wird
@@ -108,16 +87,16 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     adjazenzmatrix = adja
 
 
-    #Leitung fällt aus!!!
+    #Leitung faellt aus!!!
     adjazenzmatrix[i_Ausfallleitung,j_Ausfallleitung] = 0.0
     adjazenzmatrix[j_Ausfallleitung,i_Ausfallleitung] = 0.0
 
-    #Anzahl der Oszillatoren (berechnen aus Größe der Adjazenzmatrix)
+    #Anzahl der Oszillatoren (berechnen aus Groeße der Adjazenzmatrix)
     N = len(adjazenzmatrix[0])
 
 
-    #Koppungsstärke (wird noch auf Adjazenzmatrix draufmultipliziert)
-    Kopplung = Kopplung #sollte deutlich größer als abs(P) sein, damit das Netz synchronisiert (vgl. Literatur)
+    #Koppungsstaerke (wird noch auf Adjazenzmatrix draufmultipliziert)
+    Kopplung = Kopplung #sollte deutlich groeßer als abs(P) sein, damit das Netz synchronisiert (vgl. Literatur)
 
     #Faktor vor erster Ableitung
     alpha = 0.1
@@ -125,7 +104,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     #Leistung P(j) (kann auch wie Adjazenzmatrix eingelesen werden)
     P = Leistung #np.load("Leistung.npy")
 
-    #Kaskadenausfälle: Obergrenze für theta_j - theta_i (Relativ zur Kopplung an der Leitung)
+    #Kaskadenausfaelle: Obergrenze fuer theta_j - theta_i (Relativ zur Kopplung an der Leitung)
     max_Last_Faktor = 1/Kopplung * technische_maximallast
 
 
@@ -135,7 +114,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
     #(Nicht selbst einzustellen, wird direkt von System erstellt)
 
 
-    #Array für Thetas erstellen (jeweils mit zwei Einträgen pro Oszillator)
+    #Array fuer Thetas erstellen (jeweils mit zwei Eintraegen pro Oszillator)
     theta = theta_anfang
 
     synchronisiert = np.array([True]*N)
@@ -164,7 +143,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
 
     #1. Ordnungsparameter bestimmen
     def ordnung(N,theta):
-        #bertrachte Imaginärteil und Realteil des Parameters gesondert
+        #bertrachte Imaginaerteil und Realteil des Parameters gesondert
         tempRe = 0
         tempIm = 0
 
@@ -202,7 +181,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
         j=0
         l=0
 
-        #Schleife um die Summen für alle Werte zu bekommen (sum_kop[m] ist Summe der Kopplung für Oszillator m)
+        #Schleife um die Summen fuer alle Werte zu bekommen (sum_kop[m] ist Summe der Kopplung fuer Oszillator m)
         for m,j,l in ziped_adja:
             sum_kop[m] += Kopplung * l * np.sin(theta[j,0] - theta[m,0])
 
@@ -239,14 +218,14 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
         sync = np.array([False]*N)
 
         for o in range(0,N):
-                #überprüfen ob
+                #ueberpruefen ob
                 if (abs(delta_theta_alt[o] - delta_theta[o]) <= synchrobedingung):
                     sync[o] = True
 
         return sync
 
     # -------------------------------------------------------------------
-        #7. Kaskadenausfälle
+        #7. Kaskadenausfaelle
 
         # a
 
@@ -258,7 +237,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
 
         # b
 
-    #Überprüft die Last aller Leitungen und passt ggf. die Adjazenzmatrix an.
+    #ueberprueft die Last aller Leitungen und passt ggf. die Adjazenzmatrix an.
     def lastTest(theta, adj_einzeln, max_Last_Faktor):
         a = 0
         b = 0
@@ -284,7 +263,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
 
     # -------------------------------------------------------------------
 
-    #zurücksetzen für Prozentanzeige
+    #zuruecksetzen fuer Prozentanzeige
     zaehler = 0
 
     anzahl_ausgefallen = 1
@@ -309,7 +288,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
 
 
         #------------------
-        #IN BESTIMMTEN FÄLLEN PASSIERT ETWAS
+        #IN BESTIMMTEN FaeLLEN PASSIERT ETWAS
         if (i%output == (output-2)):
             theta_temp_2 = theta
         elif (i%output == (output-1)):
@@ -324,7 +303,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
 
             #---------------------------------
             #SYNCHRONISIERUNG
-            #überprüfen mit Toleranzgrenze (hinterste Zahl in der Funktion)
+            #ueberpruefen mit Toleranzgrenze (hinterste Zahl in der Funktion)
             synchronisiert = synchronisierungsabfrage(theta,theta_temp_1,theta_temp_2,synchronisiert_toleranz)
 
             #print(zaehler, anzahl_ausgefallen, round(r,5),np.sum(synchronisiert == True))
@@ -337,7 +316,7 @@ def modell_elektrisches_netzwerk(theta_anfang, adja, Leistung, i_Ausfallleitung,
             if anzahl_ausgefallen >=  Anzahl_ausfallgrenze_Leitungen:
                 return False, anzahl_ausgefallen, i*dt, r
 
-            if zaehler == 25:
+            if zaehler == 30:
                 #print("timeout")
                 return None, anzahl_ausgefallen, i*dt, r
 
