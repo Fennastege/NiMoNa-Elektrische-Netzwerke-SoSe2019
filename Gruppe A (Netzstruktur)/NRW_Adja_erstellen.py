@@ -121,11 +121,13 @@ Z64 = [63]
 Eingabe = [Z1,Z2,Z3,Z4,Z5,Z6,Z7,Z8,Z9,Z10,Z11,Z12,Z13,Z14,Z15,Z16,Z17,Z18,Z19,Z20,Z21,Z22,Z23,Z24,Z25,Z26,Z27,Z28,Z29,Z30,Z31,Z32,Z33,Z34,Z35,Z36,Z37,Z38,Z39,Z40,Z41,Z42,Z43,Z44,Z45,Z46,Z47,Z48,Z49,Z50,Z51,Z52,Z53,Z54,Z55,Z56,Z57,Z58,Z59,Z60,Z61,Z62,Z63,Z64]
 
 #Berechnung und Zeichnen der Adjamat
-zeichnen(init(Eingabe),postmat)
+#zeichnen(init(Eingabe),postmat)
 
+zeichnen(np.load("adja_spinne.npy"),postmat)
 #Nur Adjamat berechnen fürs abspeichern
 adjamat1 = init(Eingabe)
 
+#plt.savefig("spinne_bild.jpeg", dpi=400)
 #Aktivieren zum Abspeichern
 #Nicht vergessen: Namen danach verändern
-#np.save("adjamat_nrw_1.npy",adjamat1)
+#np.save("adjamat_random.npy",adjamat1)
