@@ -1,0 +1,41 @@
+\documentclass[11pt,a4paper,titlepage]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{ngerman}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{color}
+\usepackage{transparent}
+\usepackage[add-decimal-zero, add-integer-zero, separate-uncertainty=true]{siunitx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{footmisc}
+\usepackage{wasysym}
+\graphicspath{{PDF/M5}}
+ \mathcode`\,="013B
+
+\sisetup{
+	locale = DE,
+	per-mode = fraction
+}
+
+\begin{document}
+\section{Erweitertes Kuramoto-Modell}
+\begin{equation}
+	\frac{d^2}{dt^2}\phi_j=P_j-\alpha\frac{d}{dt}\phi_j-\sum_iK_{ij}\sin{(\phi_i-\phi_j)}
+\end{equation}
+\section{RK4}
+\begin{align}
+	\nonumber
+	&k_1=f(t_n, \ x_n) \\
+	\nonumber
+	&k_2=f(t_n+\frac{h}{2}, \ x_n+\frac{h}{2}k_1) \\
+	\nonumber
+	&k_3=f(t_n+\frac{h}{2}, \ x_n+\frac{h}{2}k_2) \\
+	\nonumber
+	&k_4=f(t_n+h, \ x_n+hk_3) \\
+\end{align}
+\end{document} 
