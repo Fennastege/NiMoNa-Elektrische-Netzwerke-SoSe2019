@@ -1,0 +1,30 @@
+Erste Folie: Erklärungsfolie
+Synchronisation besser erklären
+Was zu Adjazenzmatrix erzählen -> Pfeil am Graphentheorie-Teil hinzufügen
+	Adj ist Kern unserer Programms
+	„Wir haben die Adjazenzmatrix genutzt, um ein Netzwerk in eine mathematische 		Formulierung zu übersetzen“
+bei Kuramoto-Modell, Nebenpunkte erklären
+zweite Folie: Gleichungen
+	soweit gut, aber Was ist P_j?
+	Pfeil „Nicht lösbar“ weg
+dritte Folie: Lösen der Dgl
+	Pfeil „Räuber-Beute“ weg
+	GANZ WEG MIT DER FOLIE
+vierte Folie: Aufhänger
+fünfte Folie: „Was benötigen wir dafür?“
+sechste Folie: Karte
+	gut soweit
+siebte Folie: Kriterien
+	Inhaltsmäßig -> Synchronisationsbedingung für Synchronisationszeit
+		Phasenänderung eines Oszillator bleibt konstant
+zwölfte Folie: Synchro-GIF
+	Farben der Leitungen explizit erklären
+dreizehnte Folie: Anfälligkeit für Kaskadenausfälle
+(Hier einfügen)
+	Was ist Maximallast? Was ist Last? Formel einfügen (?!)
+	Beispiel mit Meyer-Werft erklären -> Realitätsbezug
+	Man sieht: eigenständige Untergraphen
+vierzehnte Folie: Netzwerke im Vergleich
+fünfzehnte Folie: 	
+letzte Folie: Unser Fazit
+	gut soweit
